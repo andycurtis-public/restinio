@@ -16,7 +16,7 @@
 #include <restinio/string_view.hpp>
 #include <restinio/common_types.hpp>
 
-#include <llhttp.h>
+#include "restinio/llhttp.h"
 
 #include <iosfwd>
 #include <ostream>

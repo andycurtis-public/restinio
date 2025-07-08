@@ -23,7 +23,7 @@
 cmake_minimum_required(VERSION 3.14)
 
 set(RESTINIO_LIBRARY_NAME restinio)
-project(${RESTINIO_LIBRARY_NAME}_root CXX)
+project(${RESTINIO_LIBRARY_NAME}_root C CXX)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -65,10 +65,10 @@ endif()
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/link_threads_if_necessary.cmake")
 
 option(RESTINIO_INSTALL "Generate the install target." ON)
-option(RESTINIO_TEST "Build the tests." ON)
-option(RESTINIO_SAMPLE "Build samples." ON)
-option(RESTINIO_BENCHMARK "Build the benchmarks." ON)
-option(RESTINIO_WITH_SOBJECTIZER "Add RESTinio sobjectizer integration" ON)
+option(RESTINIO_TEST "Build the tests." OFF)
+option(RESTINIO_SAMPLE "Build samples." OFF)
+option(RESTINIO_BENCHMARK "Build the benchmarks." OFF)
+option(RESTINIO_WITH_SOBJECTIZER "Add RESTinio sobjectizer integration" OFF)
 
 message(STATUS "RESTINIO_INSTALL:           ${RESTINIO_INSTALL}")
 message(STATUS "RESTINIO_TEST:              ${RESTINIO_TEST}")
@@ -82,17 +82,13 @@ message(STATUS "RESTINIO_WITH_SOBJECTIZER:  ${RESTINIO_WITH_SOBJECTIZER}")
 # * local - Rely on local sources of the dependency.
 
 # By default we assume to use an embedded version of ASIO.
-set(RESTINIO_DEP_STANDALONE_ASIO "find" CACHE STRING "How to get ASIO dependency)")
+set(RESTINIO_DEP_STANDALONE_ASIO "system" CACHE STRING "How to get ASIO dependency)")
 set_property(CACHE RESTINIO_DEP_STANDALONE_ASIO PROPERTY STRINGS "system;find")
 
 # By default we assume to use Boost::asio other than system.
 # to be more specific we will assume that find_package would do it.
 set(RESTINIO_DEP_BOOST_ASIO "find" CACHE STRING "How to get Boost.ASIO dependency)")
 set_property(CACHE RESTINIO_DEP_BOOST_ASIO PROPERTY STRINGS "system;find")
-
-# By default we assume to use an embedded version of LLHTTP.
-set(RESTINIO_DEP_LLHTTP "local" CACHE STRING "How to get llhttp (http parser) dependency)")
-set_property(CACHE RESTINIO_DEP_LLHTTP PROPERTY STRINGS "system;find;local")
 
 # By default we assume to use an embedded version of FMT.
 set(RESTINIO_DEP_FMT "local" CACHE STRING "How to get FMT dependency)")
@@ -103,7 +99,7 @@ set(RESTINIO_DEP_EXPECTED_LITE "local" CACHE STRING "How to get expected-lite de
 set_property(CACHE RESTINIO_DEP_EXPECTED_LITE PROPERTY STRINGS "system;find;local")
 
 # By default we assume to use an embedded version of Catch2.
-set(RESTINIO_DEP_CATCH2 "local" CACHE STRING "How to get Catch2 dependency)")
+set(RESTINIO_DEP_CATCH2 "find" CACHE STRING "How to get Catch2 dependency)")
 set_property(CACHE RESTINIO_DEP_CATCH2 PROPERTY STRINGS "find;local")
 
 # By default we assume to use an embedded version of SObjectizer.
@@ -113,7 +109,6 @@ set_property(CACHE RESTINIO_DEP_SOBJECTIZER PROPERTY STRINGS "system;find;local"
 
 message(STATUS "RESTINIO_DEP_STANDALONE_ASIO: ${RESTINIO_DEP_STANDALONE_ASIO}")
 message(STATUS "RESTINIO_DEP_BOOST_ASIO:      ${RESTINIO_DEP_BOOST_ASIO}")
-message(STATUS "RESTINIO_DEP_LLHTTP:          ${RESTINIO_DEP_LLHTTP}")
 message(STATUS "RESTINIO_DEP_FMT:             ${RESTINIO_DEP_FMT}")
 message(STATUS "RESTINIO_DEP_EXPECTED_LITE:   ${RESTINIO_DEP_EXPECTED_LITE}")
 message(STATUS "RESTINIO_DEP_CATCH2:          ${RESTINIO_DEP_CATCH2}")
@@ -135,7 +130,7 @@ else ()
     message(STATUS "RESTINIO_FMT_TARGET:  ${RESTINIO_FMT_TARGET}")
 endif ()
 
-# This effects llhttp and fmt.
+# This effects fmt.
 option(BUILD_SHARED_LIBS "Build shared libraries (.dll/.so)" OFF)
 option(BUILD_STATIC_LIBS "Build static libraries (.lib/.a)" ON)
 
@@ -169,15 +164,6 @@ else ()
         find_package(Boost REQUIRED)
         find_package(Boost REQUIRED COMPONENTS regex)
     endif ()
-endif ()
-
-if (RESTINIO_DEP_LLHTTP STREQUAL "find")
-    find_package(llhttp REQUIRED)
-elseif (RESTINIO_DEP_LLHTTP STREQUAL "local")
-    message("========================================")
-    message(STATUS "Add subdirectory nodejs/llhttp")
-    add_subdirectory(nodejs/llhttp)
-    message("========================================")
 endif ()
 
 if (RESTINIO_DEP_FMT STREQUAL "find")

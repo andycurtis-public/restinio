@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
+# cmake_policy(SET CMP0177 NEW)
 
 if(NOT RESTINIO_LIBRARY_NAME)
     # That must be the case when RESTinio is used as a dependency.
@@ -13,14 +14,16 @@ message(STATUS "RESTINIO_VERSION: ${RESTINIO_VERSION}")
 
 project(${RESTINIO_LIBRARY_NAME}
         VERSION ${RESTINIO_VERSION}
-        LANGUAGES CXX)
+        LANGUAGES C CXX)
 
 # ====================================================================
 # RESTinio target and it's attributes
 # ====================================================================
 
-add_library(${RESTINIO_LIBRARY_NAME} INTERFACE)
+add_library(${RESTINIO_LIBRARY_NAME} STATIC)
 add_library(${RESTINIO_LIBRARY_NAME}::${RESTINIO_LIBRARY_NAME} ALIAS ${RESTINIO_LIBRARY_NAME})
+target_sources(${RESTINIO_LIBRARY_NAME} PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/llhttp.c ${CMAKE_CURRENT_SOURCE_DIR}/api.c ${CMAKE_CURRENT_SOURCE_DIR}/http.c)
 
 target_include_directories(
     ${RESTINIO_LIBRARY_NAME} INTERFACE
@@ -82,32 +85,6 @@ elseif (RESTINIO_ASIO_SOURCE STREQUAL "boost")
 else ()
     message(FATAL_ERROR "Invalid value for RESTINIO_ASIO_SOURCE (${RESTINIO_ASIO_SOURCE})")
 endif ()
-# --------------------------------------------------------------------
-
-# --------------------------------------------------------------------
-# Handle LLHTTP dependency.
-if (RESTINIO_DEP_LLHTTP STREQUAL "system")
-    message(STATUS "Using system llhttp")
-    if (RESTINIO_LLHTTP_LIB_LINK_NAME)
-        message(STATUS "Using system llhttp with linking to custom lib name: ${RESTINIO_LLHTTP_LIB_LINK_NAME}")
-        target_link_libraries(${RESTINIO_LIBRARY_NAME} INTERFACE ${RESTINIO_LLHTTP_LIB_LINK_NAME})
-    else()
-        target_link_libraries(${RESTINIO_LIBRARY_NAME} INTERFACE llhttp)
-    endif()
-elseif (TARGET llhttp::llhttp)
-    target_link_libraries(${RESTINIO_LIBRARY_NAME} INTERFACE llhttp::llhttp)
-    message(STATUS "${RESTINIO_LIBRARY_NAME} target will depend on 'llhttp::llhttp' target")
-elseif (TARGET llhttp::llhttp_static)
-    target_link_libraries(${RESTINIO_LIBRARY_NAME} INTERFACE llhttp::llhttp_static)
-    message(STATUS "${RESTINIO_LIBRARY_NAME} target will depend on 'llhttp::llhttp_static' target")
-elseif (TARGET llhttp::llhttp_dynamic)
-    target_link_libraries(${RESTINIO_LIBRARY_NAME} INTERFACE llhttp::llhttp_dynamic)
-    message(STATUS "${RESTINIO_LIBRARY_NAME} target will depend on 'llhttp::llhttp_dynamic' target")
-else ()
-    message(FATAL_ERROR
-            "Unable to identify how to depend on llhttp. "
-            "Giving up...")
-endif()
 # --------------------------------------------------------------------
 
 # --------------------------------------------------------------------
@@ -214,7 +191,7 @@ if (RESTINIO_INSTALL)
         FILE restinio-targets.cmake
         DESTINATION ${RESTINIO_CMAKE_INSTALL_DEST_DIR} )
 
-    file(GLOB_RECURSE RESTINIO_HEADERS_ALL RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.?pp)
+    file(GLOB_RECURSE RESTINIO_HEADERS_ALL RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.?pp *.h)
     foreach (HEADER_FILE ${RESTINIO_HEADERS_ALL} )
       get_filename_component( DIR ${HEADER_FILE} PATH )
       install( FILES ${HEADER_FILE} DESTINATION ${restinio_install_include_dir}/${DIR} )
